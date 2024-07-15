@@ -1,4 +1,4 @@
-- hosts: all  # Target all hosts in your inventory
+- hosts: namespace_workloads
   become: true  # Run tasks with root privileges
   tasks:
     - name: Install httpd package
