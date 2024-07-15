@@ -2,4 +2,4 @@
 plugin: kubevirt.core.kubevirt
 connections:
   - use_service: False
-    validate_certs: false
+    validate_certs: False
