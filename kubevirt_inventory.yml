@@ -1,4 +1,6 @@
 ---
 plugin: kubevirt.core.kubevirt
 connections:
-  - use_service: False
+  - host: "{{ lookup('ansible.builtin.env', 'K8S_AUTH_HOST') }}"
+    api_key: "{{ lookup('ansible.builtin.env', 'K8S_AUTH_API_KEY') }}"
+    validate_certs: false
