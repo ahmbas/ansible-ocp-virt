@@ -1,0 +1,16 @@
+---
+fields:
+  - type: string
+    id: kube_api
+    label: Kubernetes API Endpoint
+  - type: string
+    id: kube_token
+    label: Kubernetes API Token
+    secret: true
+required:
+  - kube_api
+  - kube_token
+---
+env:
+  KUBE_API: "{{ kube_api }}"
+  KUBE_TOKEN: "{{ kube_token }}"
