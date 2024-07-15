@@ -1,5 +1,13 @@
 - hosts: all  # Target all hosts in your inventory
   tasks:
+  - name: Create project
+    kubernetes.core.k8s:
+      state: present
+      definition:
+        apiVersion: project.openshift.io/v1
+        kind: Project
+        metadata:
+          name: workloads
   - name: Create fedora virtual machine
     kubevirt.core.kubevirt_vm:
       state: present
