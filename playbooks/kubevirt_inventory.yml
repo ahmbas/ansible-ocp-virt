@@ -1,6 +1,0 @@
-- name: Retrieve VMs from targer cluster
-  plugin: kubevirt.core.kubevirt
-  connections:
-    - host: "{{ lookup('ansible.builtin.env', 'KUBE_API') }}"
-      api_key: "{{ lookup('ansible.builtin.env', 'KUBE_TOKEN') }}"
-      validate_certs: false
