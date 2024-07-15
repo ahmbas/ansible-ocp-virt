@@ -1,4 +1,3 @@
-
 plugin: kubevirt.core.kubevirt
 connections:
   - host: "{{ lookup('ansible.builtin.env', 'KUBE_API') }}"
