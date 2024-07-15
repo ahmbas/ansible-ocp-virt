@@ -1,2 +1,3 @@
 collections:
-  - name: kubevirt.core
+- name: community.general
+- name: kubevirt.core
