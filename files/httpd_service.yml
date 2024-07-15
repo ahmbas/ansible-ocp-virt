@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd-svc
+  namespace: workloads
+spec:
+  selector:
+    app: httpd
+  ports:
+    - name: httpd-port
+      protocol: TCP
+      port: 80
+      targetPort: 80
