@@ -1,0 +1,14 @@
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: httpd-route
+  namespace: workloads
+spec:
+  to:
+    kind: Service
+    name: httpd-svc
+    weight: 100
+  port:
+    targetPort: 80
+  wildcardPolicy: None
