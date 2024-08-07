@@ -50,3 +50,6 @@
     retries: 60
     delay: 10
     until: (vmi.resources[0].status.interfaces[0]['ipAddress'] | default('')) | length > 0
+  - name: pause for 2 mins
+    ansible.builtin.pause:
+      minutes: 2
