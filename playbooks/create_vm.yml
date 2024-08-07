@@ -37,7 +37,7 @@
                 #cloud-config
                 # The default username is: fedora
                 ssh_authorized_keys:
-                # - ssh-rsa AAA...
+                - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCc7QLJk9xxhPAKx+IVjCJEboHwmU03gVi0YSMdSiga3BjGxJ5LWedJzbClgAGwd1hqZBoB00ALZyjSZ+Zsbr0uu1kEtbYPBHWKkVIpYlBQ6Pohz2QlDPJrR5GKTdOx/ugUTyJGVcoutab5WxbpNLAscbdyjNdPmGJYMozYVtTIoGATWj1TlqOsNcmriev5jY4FLNCLtkcAxPkqVcYvS7CL9tvurfY4Ua63THV0ZWqFd3MCWX3Z1fYlDw3cREBOx5AsehvZqk9QhRg14LPw1LNirxurogEt7Xz1uBNSQZS0YvpCHhdYwf1BbOlc7vqoM0qgyjN4Ub7j6vf89IyKpcfWbJ7o2yuFMx3uyTmj56FJMO6C57c7gdii7xIA8m9GGnvSgh61eVtxOQeW3A3/1LZeFuyW9FLhzsx2/ZaV0irl+9r4eCVOLUcnTbvlEfXgD0nTzulV98i10+SiODsZ7rEgVx65aRUlrjVTsJMqn+6bKkc2PsdpXBajj5hQOt3k0Bc=
             name: cloudinit
   
   - name: Wait for virtual machine IP to be populated
