@@ -1,0 +1,208 @@
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  vars:
+    redis_vms:
+    - "redis-master-1"
+    - "redis-master-2"
+    - "redis-master-3"
+    - "redis-slave-1"
+    - "redis-slave-2"
+    - "redis-slave-3"
+    project: redis-cluster
+  tasks:
+  - name: Create project
+    kubernetes.core.k8s:
+      state: present
+      definition:
+        apiVersion: project.openshift.io/v1
+        kind: Project
+        metadata:
+          name: "{{ project }}"
+
+  - name: Create redis cluster service
+    kubernetes.core.k8s:
+      state: present
+      definition:
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: "redis"
+          namespace: "{{ project }}"
+        spec:
+          selector:
+            app: redis
+          ports:
+            - name: redis
+              protocol: TCP
+              port: 6379
+              targetPort: 6379
+            - name: bus
+              protocol: TCP
+              port: 16379
+              targetPort: 16379
+
+  - name: Create redis VM services
+    kubernetes.core.k8s:
+      state: present
+      definition:
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: "{{ item }}"
+          namespace: "{{ project }}"
+        spec:
+          selector:
+            vm.kubevirt.io/name: "{{ item }}"
+          ports:
+            - name: redis
+              protocol: TCP
+              port: 6379
+              targetPort: 6379
+            - name: bus
+              protocol: TCP
+              port: 16379
+              targetPort: 16379
+    with_items:
+    - "{{ redis_vms }}"
+
+  - name: Create redis virtual machines
+    kubevirt.core.kubevirt_vm:
+      state: present
+      name: "{{ item }}"
+      namespace: "{{ project }}"
+      labels:
+        app: redis
+      instancetype:
+        name: u1.medium
+      spec:
+        domain:
+          devices:
+            interfaces:
+              - name: default
+                masquerade: {}
+        networks:
+          - name: default
+            pod: {}
+        volumes:
+          - containerDisk:
+              image: quay.io/containerdisks/fedora:latest
+            name: containerdisk
+          - cloudInitNoCloud:
+              userData: |-
+                #cloud-config
+                user: fedora
+                password: fedora
+                chpasswd:
+                  expire: false
+                ssh_pwauth: true
+                packages:
+                - redis
+                runcmd:
+                - sed -i "s/bind 127.0.0.1/bind 0.0.0.0/" /etc/redis/redis.conf
+                - sed -i "s/protected-mode yes/protected-mode no/" /etc/redis/redis.conf
+                - sed -i "s/# cluster-enabled yes/cluster-enabled yes/" /etc/redis/redis.conf
+                - sed -i "s/# cluster-config-file nodes-6379.conf/cluster-config-file nodes-6379.conf/" /etc/redis/redis.conf
+                - sed -i "s/# cluster-node-timeout 15000/cluster-node-timeout 15000/" /etc/redis/redis.conf
+                - sed -i "s/# replica-announce-ip 5.5.5.5/replica-announce-ip {{(query('kubernetes.core.k8s', kind='Service', resource_name=item,namespace=project) | first ).spec.clusterIP}}/" /etc/redis/redis.conf
+                - sed -i "s/# cluster-announce-ip 10.1.1.5/cluster-announce-ip {{(query('kubernetes.core.k8s', kind='Service', resource_name=item,namespace=project) | first ).spec.clusterIP}}/" /etc/redis/redis.conf
+                - systemctl enable --now redis
+            name: cloudinit
+    with_items:
+    - "{{ redis_vms }}"
+
+  - name: Create redis-cli deployment
+    kubernetes.core.k8s:
+      state: present
+      definition:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: redis-cli
+          namespace: "{{ project }}"
+          labels:
+            app: redis-cli
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: redis-cli
+          template:
+            metadata:
+              labels:
+                app: redis-cli
+            spec:
+              containers:
+              - name:  redis-cli
+                image: redis:latest
+                command: ["/bin/bash", "-c", "tail -f /dev/null"]
+
+  - name: Create redis-insights deployment
+    kubernetes.core.k8s:
+      state: present
+      definition:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: redisinsight
+          namespace: "{{ project }}"
+          labels:
+            app: redisinsight
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: redisinsight
+          template:
+            metadata:
+              labels:
+                app: redisinsight
+            spec:
+              containers:
+              - name:  redisinsight
+                image: redislabs/redisinsight:1.7.0
+                imagePullPolicy: IfNotPresent
+                volumeMounts:
+                - name: db 
+                  mountPath: /db
+                ports:
+                - containerPort: 8001
+                  protocol: TCP
+              volumes:
+              - name: db
+                emptyDir: {}
+
+  - name: Create redis-insights service
+    kubernetes.core.k8s:
+      state: present
+      definition:
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: redis-insights
+          namespace: "{{ project }}"
+        spec:
+          type: ClusterIP
+          ports:
+            - port: 80
+              targetPort: 8001
+          selector:
+            app: redisinsight
+
+  - name: Create redis-insights route
+    kubernetes.core.k8s:
+      state: present
+      definition:
+        apiVersion: route.openshift.io/v1
+        kind: Route
+        metadata:
+          name: redis-insights
+          namespace: "{{ project }}"
+        spec:
+          to:
+            kind: Service
+            name: redis-insights
+            weight: 100
+          port:
+            targetPort: 8001
+          wildcardPolicy: None
