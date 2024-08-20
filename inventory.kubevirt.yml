@@ -1,5 +1,5 @@
 ---
-plugin: kubevirt.core.kubevirt
+plugin: redhat.openshift_virtualization.kubevirt
 connections:
   - use_service: False
     validate_certs: False
