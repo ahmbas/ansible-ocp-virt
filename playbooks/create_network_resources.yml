@@ -1,7 +1,7 @@
 - hosts: all  # Target all hosts in your inventory
   tasks:
   - name: Create a httpd service
-    kubernetes.core.k8s:
+    redhat.openshift.k8s:
       state: present
       definition:
         apiVersion: v1
@@ -19,7 +19,7 @@
               targetPort: 80
   
   - name: Create a httpd route
-    kubernetes.core.k8s:
+    redhat.openshift.k8s:
       state: present
       definition:
         kind: Route
